@@ -8,8 +8,11 @@ ENV FOLDER_NAME="ocomon-5.0"
 #COPY ./assets/start_ocomon.sh /start_ocomon
 #RUN chmod +x /start_ocomon
 
+# Atualizar pacotes
+RUN apt update && apt full-upgrade -y
+
 # Instalar Apache, PHP 8.3 e alguns pacotes adicionais
-RUN apt-get update && apt-get install -y \
+RUN apt install -y \
     ca-certificates apt-transport-https software-properties-common lsb-release \
     apache2 && apt-get install -y \
     php8.3 \
