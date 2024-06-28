@@ -5,12 +5,6 @@ ENV OCOMON_LINK="https://sourceforge.net/projects/ocomonphp/files/OcoMon_5.0/Fin
 ENV DB_FILE_PATH="/var/www/html/install/5.x/01-DB_OCOMON_5.x-FRESH_INSTALL_STRUCTURE_AND_BASIC_DATA.sql"
 ENV FOLDER_NAME="ocomon-5.0"
 
-#COPY ./assets/start_ocomon.sh /start_ocomon
-#RUN chmod +x /start_ocomon
-
-# Atualizar pacotes
-RUN apt update && apt full-upgrade -y
-
 # Instalar Apache, PHP 8.3 e alguns pacotes adicionais
 RUN apt install -y \
     ca-certificates apt-transport-https software-properties-common lsb-release \
@@ -27,7 +21,8 @@ RUN apt install -y \
     php8.3-mbstring \
     curl \
     cron \
-    nano
+    nano \
+    --no-install-recommends
 
 # Configurar o timezone do PHP para o Brasil
 RUN echo "date.timezone = America/Porto_Velho" >> /etc/php/8.3/cli/php.ini
