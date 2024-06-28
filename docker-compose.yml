@@ -2,6 +2,7 @@ services:
   web:
     build: .
     container_name: ocomon_web
+    restart: always
     ports:
       - "8081:80"
     volumes:
@@ -19,6 +20,8 @@ services:
   db:
     image: mysql:5.7
     container_name: ocomon_db
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
       ports:
    - "3306:3306"
     volumes:
