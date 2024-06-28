@@ -5,8 +5,8 @@ ENV OCOMON_LINK="https://sourceforge.net/projects/ocomonphp/files/OcoMon_5.0/Fin
 ENV DB_FILE_PATH="/var/www/html/install/5.x/01-DB_OCOMON_5.x-FRESH_INSTALL_STRUCTURE_AND_BASIC_DATA.sql"
 ENV FOLDER_NAME="ocomon-5.0"
 
-COPY ./assets/start_ocomon.sh /start_ocomon
-RUN chmod +x /start_ocomon
+#COPY ./assets/start_ocomon.sh /start_ocomon
+#RUN chmod +x /start_ocomon
 
 # Instalar Apache, PHP 8.3 e alguns pacotes adicionais
 RUN apt-get update && apt-get install -y \
