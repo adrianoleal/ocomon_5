@@ -6,7 +6,7 @@ ENV DB_FILE_PATH="/var/www/html/install/5.x/01-DB_OCOMON_5.x-FRESH_INSTALL_STRUC
 ENV FOLDER_NAME="ocomon-5.0"
 
 # Instalar Apache, PHP 8.3 e alguns pacotes adicionais
-RUN apt install -y \
+RUN apt-get update && apt-get install -y \
     ca-certificates apt-transport-https software-properties-common lsb-release \
     apache2 && apt-get install -y \
     php8.3 \
