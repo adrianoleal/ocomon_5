@@ -1,0 +1,5 @@
+# m h  dom mon dow   command
+* * * * * /usr/bin/php /var/www/html/ocomon/open_tickets_by_email/service/getMailAndOpenTicket.php
+* * * * * /usr/bin/php /var/www/html/api/ocomon_api/service/sendEmail.php
+* * * * * /usr/bin/php /var/www/html/ocomon/service/update_auto_approval.php
+#* * * * * /usr/bin/php /var/www/html/ocomon/service/update_auto_close_due_inactivity.php
