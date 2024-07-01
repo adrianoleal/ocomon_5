@@ -1,6 +1,8 @@
 services:
   web:
-    build: .
+    build:
+      context: .
+      target: ocomon_web
     container_name: ocomon_web
     restart: always
     ports:
@@ -9,9 +11,9 @@ services:
       - .:/var/www/html
     environment:
       - DB_HOST=db
-      - DB_NAME=ocomon
-      - DB_USER=ocomon_user
-      - DB_PASSWORD=ocomon_password
+      - DB_NAME=ocomon_5
+      - DB_USER=ocomon_5
+      - DB_PASSWORD=senha_ocomon_mysql
     depends_on:
       - db
     networks:
@@ -31,9 +33,9 @@ services:
       - "3306:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=your_root_password
-      - MYSQL_DATABASE=ocomon
-      - MYSQL_USER=ocomon_user
-      - MYSQL_PASSWORD=ocomon_password
+      - MYSQL_DATABASE=ocomon_5
+      - MYSQL_USER=ocomon_5
+      - MYSQL_PASSWORD=senha_ocomon_mysql
     networks:
       - ocomon_network
 
