@@ -4,7 +4,7 @@ Teste da versão Ocomon_5, imagens (web e db) separadas.
 
 Arquivo Dockerfile para montar uma imagem Docker com o OcoMon 5.0.
 
-A imagem é montada sobre o Ubuntu 24.04 com:
+As imagens são montada sobre php:8.3-apache e mysql:5.7
 
 Apache
 PHP 8.3
