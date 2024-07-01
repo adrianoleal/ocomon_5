@@ -1,36 +1,41 @@
-# Usar a imagem base do Ubuntu
-FROM ubuntu:24.04
+# Etapa 1: Construir a imagem do banco de dados MySQL
+FROM mysql:5.7 as ocomon_db
+
+ENV MYSQL_ROOT_PASSWORD=your_root_password
+ENV MYSQL_DATABASE=ocomon
+ENV MYSQL_USER=ocomon_user
+ENV MYSQL_PASSWORD=ocomon_password
+
+# Copiar o arquivo SQL de inicialização para o contêiner MySQL
+COPY ./docker-entrypoint-initdb.d /docker-entrypoint-initdb.d
+
+# Etapa 2: Construir a imagem do servidor web
+FROM php:8.3-apache as ocomon_web
 
 ENV OCOMON_LINK="https://sourceforge.net/projects/ocomonphp/files/OcoMon_5.0/Final/ocomon-5.0.tar.gz/download"
-ENV DB_FILE_PATH="/var/www/html/install/5.x/01-DB_OCOMON_5.x-FRESH_INSTALL_STRUCTURE_AND_BASIC_DATA.sql"
 ENV FOLDER_NAME="ocomon-5.0"
 
-# Instalar Apache, PHP 8.3 e alguns pacotes adicionais
-RUN apt-get update && apt-get install -y \
-    ca-certificates apt-transport-https software-properties-common lsb-release \
-    apache2 && apt-get install -y \
-    php8.3 \
-    libapache2-mod-php8.3 \
-    libapache2-mod-fcgid \
-    php8.3-mysql \
-    php8.3-curl \
-    php8.3-iconv \
-    php8.3-gd \
-    php8.3-imap \
-    php8.3-ldap \
-    php8.3-mbstring \
+# Instalar dependências PHP e outras ferramentas necessárias
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libfreetype6-dev \
+    libjpeg62-turbo-dev \
+    libpng-dev \
+    libwebp-dev \
+    libxpm-dev \
+    libonig-dev \
+    libldap2-dev \
+    libzip-dev \
     curl \
     cron \
-    nano \
-    --no-install-recommends
+    nano && \
+    docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp --with-xpm && \
+    docker-php-ext-install gd mysqli mbstring ldap zip && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Configurar o timezone do PHP para o Brasil
-RUN echo "date.timezone = America/Porto_Velho" >> /etc/php/8.3/cli/php.ini
+RUN echo "date.timezone = America/Sao_Paulo" > /usr/local/etc/php/conf.d/timezone.ini
 
-# Apache ServerName
-RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
-# Configurar o Apache para suportar index.php
-RUN sed -i -e 's/DirectoryIndex index.html/DirectoryIndex index.php index.html/' /etc/apache2/mods-enabled/dir.conf
 # Copiar o arquivo de configuração do Apache para permitir reescrita de URLs
 COPY ./assets/000-default.conf /etc/apache2/sites-available/000-default.conf
 # Habilitar o mod_rewrite do Apache
@@ -43,18 +48,18 @@ RUN chmod 0644 /etc/cron.d/ocomon-cron
 RUN crontab /etc/cron.d/ocomon-cron
 RUN touch /var/log/cron.log
 
-RUN curl -L ${OCOMON_LINK} | tar -xz -C /var/www/html
-RUN mv /var/www/html/${FOLDER_NAME}/* /var/www/html
-RUN rm -Rf /var/www/html/${FOLDER_NAME}
-RUN cp /var/www/html/includes/config.inc.php-dist /var/www/html/includes/config.inc.php
-RUN chmod -R 755 /var/www/html
-RUN chown -R www-data:www-data /var/www/html
+# Baixar e configurar o Ocomon
+RUN curl -L ${OCOMON_LINK} | tar -xz -C /var/www/html && \
+    mv /var/www/html/${FOLDER_NAME}/* /var/www/html && \
+    rm -Rf /var/www/html/${FOLDER_NAME} && \
+    cp /var/www/html/includes/config.inc.php-dist /var/www/html/includes/config.inc.php && \
+    chmod -R 755 /var/www/html && \
+    chown -R www-data:www-data /var/www/html
 
-# Copiar o arquivo SQL para um diretório acessível
-RUN mkdir -p /docker-entrypoint-initdb.d
-RUN cp ${DB_FILE_PATH} /docker-entrypoint-initdb.d/init.sql
+# Copiar o arquivo SQL de inicialização do banco de dados para o diretório apropriado
+COPY --from=ocomon_web /var/www/html/install/5.x/01-DB_OCOMON_5.x-FRESH_INSTALL_STRUCTURE_AND_BASIC_DATA.sql /docker-entrypoint-initdb.d/init.sql
 
 # Expor a porta 80 para o serviço web
 EXPOSE 80
 
-CMD ["apache2ctl", "-D", "FOREGROUND"]
+CMD ["apache2-foreground"]
