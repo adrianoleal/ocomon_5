@@ -15,8 +15,8 @@ FROM php:8.3-apache as ocomon_web
 ENV OCOMON_LINK="https://sourceforge.net/projects/ocomonphp/files/OcoMon_5.0/Final/ocomon-5.0.tar.gz/download"
 ENV FOLDER_NAME="ocomon-5.0"
 
-# Instalar dependências PHP e outras ferramentas necessárias
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Instalar dependências PHP e outras ferramentas necessárias (--no-install-recommends)
+RUN apt-get update && apt-get install -y \
     libfreetype6-dev \
     libjpeg62-turbo-dev \
     libpng-dev \
@@ -25,16 +25,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libonig-dev \
     libldap2-dev \
     libzip-dev \
+    libssl-dev \
+    libc-client-dev \
+    libkrb5-dev \
     curl \
     cron \
     nano && \
     docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp --with-xpm && \
-    docker-php-ext-install gd mysqli mbstring ldap zip && \
+    docker-php-ext-configure imap --with-kerberos --with-imap-ssl && \
+    docker-php-ext-install gd mysqli pdo pdo_mysql curl iconv mbstring ldap zip imap && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 # Configurar o timezone do PHP para o Brasil
-RUN echo "date.timezone = America/Sao_Paulo" > /usr/local/etc/php/conf.d/timezone.ini
+RUN echo "date.timezone = America/Porto_Velho" > /usr/local/etc/php/conf.d/timezone.ini
 
 # Copiar o arquivo de configuração do Apache para permitir reescrita de URLs
 COPY ./assets/000-default.conf /etc/apache2/sites-available/000-default.conf
@@ -59,7 +63,7 @@ RUN curl -L ${OCOMON_LINK} | tar -xz -C /var/www/html && \
 # Copiar o arquivo SQL de inicialização do banco de dados para o diretório apropriado
 COPY --from=ocomon_web /var/www/html/install/5.x/01-DB_OCOMON_5.x-FRESH_INSTALL_STRUCTURE_AND_BASIC_DATA.sql /docker-entrypoint-initdb.d/init.sql
 
-# Expor a porta 80 para o serviço web
-EXPOSE 80
+# Expor a porta 8081 para o serviço web
+EXPOSE 8081
 
 CMD ["apache2-foreground"]
