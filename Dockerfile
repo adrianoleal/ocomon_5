@@ -1,22 +1,11 @@
-# Etapa 1: Construir a imagem do banco de dados MySQL
-FROM mysql:5.7 as ocomon_db
-
-ENV MYSQL_ROOT_PASSWORD=your_root_password
-ENV MYSQL_DATABASE=ocomon_5
-ENV MYSQL_USER=ocomon_5
-ENV MYSQL_PASSWORD=senha_ocomon_mysql
-
-# Copiar o arquivo SQL de inicialização para o contêiner MySQL
-COPY ./docker-entrypoint-initdb.d /docker-entrypoint-initdb.d
-
-# Etapa 2: Construir a imagem do servidor web
+# Etapa 1: Construir a imagem do servidor web
 FROM php:8.3-apache as ocomon_web
 
 ENV OCOMON_LINK="https://sourceforge.net/projects/ocomonphp/files/OcoMon_5.0/Final/ocomon-5.0.tar.gz/download"
 ENV FOLDER_NAME="ocomon-5.0"
 
-# Instalar dependências PHP e outras ferramentas necessárias (--no-install-recommends)
-RUN apt-get update && apt-get install -y \
+# Instalar dependências PHP e outras ferramentas necessárias
+RUN apt-get update && apt-get install -y --no-install-recommends \
     libfreetype6-dev \
     libjpeg62-turbo-dev \
     libpng-dev \
@@ -60,10 +49,27 @@ RUN curl -L ${OCOMON_LINK} | tar -xz -C /var/www/html && \
     chmod -R 755 /var/www/html && \
     chown -R www-data:www-data /var/www/html
 
+# Criar a pasta docker-entrypoint-initdb.d
+RUN mkdir -p /docker-entrypoint-initdb.d
+
 # Copiar o arquivo SQL de inicialização do banco de dados para o diretório apropriado
-COPY --from=ocomon_web /var/www/html/install/5.x/01-DB_OCOMON_5.x-FRESH_INSTALL_STRUCTURE_AND_BASIC_DATA.sql /docker-entrypoint-initdb.d/init.sql
+RUN cp /var/www/html/install/5.x/01-DB_OCOMON_5.x-FRESH_INSTALL_STRUCTURE_AND_BASIC_DATA.sql /docker-entrypoint-initdb.d/init.sql
 
 # Expor a porta 8081 para o serviço web
 EXPOSE 8081
 
 CMD ["apache2-foreground"]
+
+# Etapa 2: Construir a imagem do banco de dados MySQL
+FROM mysql:5.7 as ocomon_db
+
+ENV MYSQL_ROOT_PASSWORD=your_root_password
+ENV MYSQL_DATABASE=ocomon_5
+ENV MYSQL_USER=ocomon_5
+ENV MYSQL_PASSWORD=senha_ocomon_mysql
+
+# Copiar o arquivo SQL de inicialização para o contêiner MySQL
+COPY --from=ocomon_web /docker-entrypoint-initdb.d/init.sql /docker-entrypoint-initdb.d/init.sql
+
+# Expor a porta 3306 para o serviço MySQL
+EXPOSE 3306
