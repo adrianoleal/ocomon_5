@@ -72,6 +72,8 @@ ENV MYSQL_DATABASE=ocomon_5
 ENV MYSQL_USER=ocomon_5
 ENV MYSQL_PASSWORD=senha_ocomon_mysql
 
+# Criar a pasta docker-entrypoint-initdb.d
+RUN mkdir -p /docker-entrypoint-initdb.d
 # Copiar o arquivo SQL de inicialização para o contêiner MySQL
 COPY --from=ocomon_web /docker-entrypoint-initdb.d/init.sql /docker-entrypoint-initdb.d/init.sql
 
