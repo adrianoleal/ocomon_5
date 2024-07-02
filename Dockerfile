@@ -53,6 +53,9 @@ RUN curl -L ${OCOMON_LINK} | tar -xz -C /var/www/html && \
     chmod -R 755 /var/www/html && \
     chown -R www-data:www-data /var/www/html
 
+# Definir o diretório de trabalho
+WORKDIR /var/www/html
+
 # Criar a pasta docker-entrypoint-initdb.d
 RUN mkdir -p /docker-entrypoint-initdb.d
 
