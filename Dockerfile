@@ -4,8 +4,8 @@ FROM php:8.3-apache as ocomon_web
 ENV OCOMON_LINK="https://sourceforge.net/projects/ocomonphp/files/OcoMon_5.0/Final/ocomon-5.0.tar.gz/download"
 ENV FOLDER_NAME="ocomon-5.0"
 
-# Instalar dependências PHP e outras ferramentas necessárias
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Instalar dependências PHP e outras ferramentas necessárias # --no-install-recommends
+RUN apt-get update && apt-get install -y \
     libfreetype6-dev \
     libjpeg62-turbo-dev \
     libpng-dev \
@@ -29,6 +29,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Configurar o timezone do PHP para o Brasil
 RUN echo "date.timezone = America/Porto_Velho" > /usr/local/etc/php/conf.d/timezone.ini
 
+# Apache ServerName
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
+# Configurar o Apache para suportar index.php
+RUN sed -i -e 's/DirectoryIndex index.html/DirectoryIndex index.php index.html/' /etc/apache2/mods-enabled/dir.conf
 # Copiar o arquivo de configuração do Apache para permitir reescrita de URLs
 COPY ./assets/000-default.conf /etc/apache2/sites-available/000-default.conf
 # Habilitar o mod_rewrite do Apache
