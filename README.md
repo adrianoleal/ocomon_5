@@ -16,12 +16,14 @@ Arquivo assets/Dockerfile monta imagem docker msql e restaura o db.
 
 
 Requisitos
-É necessário que você tenha o Docker instalado em seu ambiente.
+É necessário que você tenha o Docker e docker-compose instalado em seu ambiente.
 
 Instruções (use o terminal para digitar os comandos a seguir)
+Crie uma pasta para o projeto (ex: /home/user/projetos/)
 Clone este repositório
 git clone https://github.com/adrianoleal/ocomon_5.git
-
+Na pasta ocomon_5, execute o compose:
+docker-compose up --build
 
 Acesso ao OcoMon
 http://localhost:8081
