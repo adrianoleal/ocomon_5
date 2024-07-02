@@ -78,9 +78,8 @@ ENV MYSQL_PASSWORD=senha_ocomon_mysql
 # Criar a pasta docker-entrypoint-initdb.d
 #RUN mkdir -p /docker-entrypoint-initdb.d
 # Copiar o arquivo SQL de inicialização para o contêiner MySQL
-#COPY --from=ocomon_web /docker-entrypoint-initdb.d/init.sql /docker-entrypoint-initdb.d/init.sql
-
-ADD --from=ocomon_web /docker-entrypoint-initdb.d/init.sql /docker-entrypoint-initdb.d
+COPY --from=ocomon_web /docker-entrypoint-initdb.d/init.sql /docker-entrypoint-initdb.d/init.sql
+#ADD --from=ocomon_web /docker-entrypoint-initdb.d/init.sql /docker-entrypoint-initdb.d
 
 # Expor a porta 3306 para o serviço MySQL
 EXPOSE 3306
