@@ -50,10 +50,10 @@ RUN touch /var/log/cron.log
 RUN curl -L ${OCOMON_LINK} | tar -xz -C /var/www/html && \
     mv /var/www/html/${FOLDER_NAME}/* /var/www/html && \
     rm -Rf /var/www/html/${FOLDER_NAME}
-    #cp /var/www/html/includes/config.inc.php-dist /var/www/html/includes/config.inc.php && \
 # Copiar o arquivo de de configurações do Ocomon config.inc.php:
-COPY ./assets/config.inc.php-dist /var/www/html/includes/config.inc.php && \
-    chmod -R 755 /var/www/html && \
+COPY ./assets/config.inc.php-dist /var/www/html/includes/config.inc.php
+# Aplicando permissões:
+RUN chmod -R 755 /var/www/html && \
     chown -R www-data:www-data /var/www/html
 
 # Definir o diretório de trabalho
