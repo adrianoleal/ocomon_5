@@ -4,7 +4,7 @@ FROM php:8.3-apache as ocomon_web
 ENV OCOMON_LINK="https://sourceforge.net/projects/ocomonphp/files/OcoMon_5.0/Final/ocomon-5.0.tar.gz/download"
 ENV FOLDER_NAME="ocomon-5.0"
 
-# Instalar dependências PHP e outras ferramentas necessárias # --no-install-recommends
+# Instalar dependências PHP e outras ferramentas necessárias
 RUN apt-get update && apt-get install -y \
     libfreetype6-dev \
     libjpeg62-turbo-dev \
@@ -65,11 +65,11 @@ RUN mkdir -p /docker-entrypoint-initdb.d
 # Copiar o arquivo SQL de inicialização do banco de dados para o diretório apropriado
 RUN cp /var/www/html/install/5.x/01-DB_OCOMON_5.x-FRESH_INSTALL_STRUCTURE_AND_BASIC_DATA.sql /docker-entrypoint-initdb.d/init.sql
 
+# Iniciando o cron em primeiro plano:
+CMD ["cron","-f"]
+
 # Expor a porta 8081 para o serviço web
 EXPOSE 8081
-
-CMD ["apache2-foreground"]
-CMD ["cron", "-f"]
 
 # Etapa 2: Construir a imagem do banco de dados MySQL
 FROM mysql:5.7 as ocomon_db
