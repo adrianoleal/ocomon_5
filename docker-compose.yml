@@ -24,7 +24,6 @@ services:
       context: .
       target: ocomon_db
     volumes:
-      #- ./docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
       - db_data:/var/lib/mysql
     container_name: ocomon_db
     restart: always
