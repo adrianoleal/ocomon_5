@@ -17,14 +17,15 @@ RUN apt-get update && apt-get install -y \
     libssl-dev \
     libc-client-dev \
     libkrb5-dev \
+    libcurl4-openssl-dev \
     curl \
     cron \
     nano && \
     docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp --with-xpm && \
     docker-php-ext-configure imap --with-kerberos --with-imap-ssl && \
-    docker-php-ext-install gd mysqli pdo pdo_mysql curl iconv mbstring ldap zip imap && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    docker-php-ext-install gd mysqli pdo pdo_mysql curl iconv mbstring ldap zip imap # && \
+#    apt-get clean && \
+#    rm -rf /var/lib/apt/lists/*
 
 # Configurar o timezone do PHP para o Brasil
 RUN echo "date.timezone = America/Porto_Velho" > /usr/local/etc/php/conf.d/timezone.ini
@@ -75,11 +76,8 @@ ENV MYSQL_DATABASE=ocomon_5
 ENV MYSQL_USER=ocomon_5
 ENV MYSQL_PASSWORD=senha_ocomon_mysql
 
-# Criar a pasta docker-entrypoint-initdb.d
-#RUN mkdir -p /docker-entrypoint-initdb.d
 # Copiar o arquivo SQL de inicialização para o contêiner MySQL
 COPY --from=ocomon_web /docker-entrypoint-initdb.d/init.sql /docker-entrypoint-initdb.d/init.sql
-#ADD --from=ocomon_web /docker-entrypoint-initdb.d/init.sql /docker-entrypoint-initdb.d
 
 # Expor a porta 3306 para o serviço MySQL
 EXPOSE 3306
