@@ -69,6 +69,7 @@ RUN cp /var/www/html/install/5.x/01-DB_OCOMON_5.x-FRESH_INSTALL_STRUCTURE_AND_BA
 EXPOSE 8081
 
 CMD ["apache2-foreground"]
+CMD ["cron", "-f"]
 
 # Etapa 2: Construir a imagem do banco de dados MySQL
 FROM mysql:5.7 as ocomon_db
