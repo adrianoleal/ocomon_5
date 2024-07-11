@@ -1,11 +1,11 @@
 # Etapa 1: Construir a imagem do servidor web
-FROM php:8.3-apache as ocomon_web
+FROM php:8.3-apache AS ocomon_web
 
 ENV OCOMON_LINK="https://sourceforge.net/projects/ocomonphp/files/OcoMon_5.0/Final/ocomon-5.0.tar.gz/download"
 ENV FOLDER_NAME="ocomon-5.0"
 
 # Instalar dependências PHP e outras ferramentas necessárias
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     libfreetype6-dev \
     libjpeg62-turbo-dev \
     libpng-dev \
@@ -19,13 +19,12 @@ RUN apt-get update && apt-get install -y \
     libkrb5-dev \
     libcurl4-openssl-dev \
     curl \
-    cron \
     nano && \
     docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp --with-xpm && \
     docker-php-ext-configure imap --with-kerberos --with-imap-ssl && \
-    docker-php-ext-install gd mysqli pdo pdo_mysql curl iconv mbstring ldap zip imap # && \
-#    apt-get clean && \
-#    rm -rf /var/lib/apt/lists/*
+    docker-php-ext-install gd mysqli pdo pdo_mysql curl iconv mbstring ldap zip imap && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Configurar o timezone do PHP para o Brasil
 RUN echo "date.timezone = America/Porto_Velho" > /usr/local/etc/php/conf.d/timezone.ini
@@ -39,18 +38,11 @@ COPY ./assets/000-default.conf /etc/apache2/sites-available/000-default.conf
 # Habilitar o mod_rewrite do Apache
 RUN a2enmod rewrite
 
-# Copiar o arquivo de crontab
-COPY ./assets/mycrontab /etc/cron.d/ocomon-cron
-RUN chmod 0644 /etc/cron.d/ocomon-cron
-# Apply cron job
-RUN crontab /etc/cron.d/ocomon-cron
-RUN touch /var/log/cron.log
-
 # Baixar e configurar o Ocomon
 RUN curl -L ${OCOMON_LINK} | tar -xz -C /var/www/html && \
     mv /var/www/html/${FOLDER_NAME}/* /var/www/html && \
     rm -Rf /var/www/html/${FOLDER_NAME}
-# Copiar o arquivo de de configurações do Ocomon config.inc.php:
+# Copiar o arquivo de configurações do Ocomon config.inc.php:
 COPY ./assets/config.inc.php-dist /var/www/html/includes/config.inc.php
 # Aplicando permissões:
 RUN chmod -R 755 /var/www/html && \
@@ -65,22 +57,52 @@ RUN mkdir -p /docker-entrypoint-initdb.d
 # Copiar o arquivo SQL de inicialização do banco de dados para o diretório apropriado
 RUN cp /var/www/html/install/5.x/01-DB_OCOMON_5.x-FRESH_INSTALL_STRUCTURE_AND_BASIC_DATA.sql /docker-entrypoint-initdb.d/init.sql
 
-# Iniciando o cron em primeiro plano:
-CMD ["cron","-f"]
-
 # Expor a porta 8081 para o serviço web
 EXPOSE 8081
 
-# Etapa 2: Construir a imagem do banco de dados MySQL
-FROM mysql:5.7 as ocomon_db
+CMD ["apache2-foreground"]
 
-ENV MYSQL_ROOT_PASSWORD=your_root_password
-ENV MYSQL_DATABASE=ocomon_5
-ENV MYSQL_USER=ocomon_5
-ENV MYSQL_PASSWORD=senha_ocomon_mysql
+# Etapa 2: Construir a imagem do banco de dados MySQL
+FROM mysql:5.7 AS ocomon_db
+
+ENV MYSQL_ROOT_PASSWORD=GsdW25T7@scf55Oi
+ENV MYSQL_DATABASE=ocomon
+ENV MYSQL_USER=ocomon_user
+ENV MYSQL_PASSWORD=AsIhhITg19r9j0
 
 # Copiar o arquivo SQL de inicialização para o contêiner MySQL
 COPY --from=ocomon_web /docker-entrypoint-initdb.d/init.sql /docker-entrypoint-initdb.d/init.sql
 
 # Expor a porta 3306 para o serviço MySQL
 EXPOSE 3306
+
+# Etapa 3: Construir a imagem para cron
+FROM alpine:3.18 AS ocomon_cron
+
+# Instalar cron, PHP, e curl no contêiner Alpine
+RUN apk add --no-cache \
+    php \
+    php-cli \
+    php-mbstring \
+    php-ldap \
+    php-imap \
+    php-curl \
+    php-gd \
+    php-pdo \
+    php-mysqli \
+    php-sqlite3 \
+    php-phar \
+    php-zip \
+    curl \
+    openrc \
+    && rm -rf /var/cache/apk/*
+
+# Adicionar entrypoint script
+COPY ./assets/start_cron.sh /start_cron.sh
+RUN chmod +x /start_cron.sh
+
+# Copiar o arquivo de crontab
+COPY ./assets/mycrontab /etc/crontabs/root
+RUN chmod 0644 /etc/crontabs/root
+
+ENTRYPOINT ["/start_cron.sh"]
