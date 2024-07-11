@@ -65,10 +65,10 @@ CMD ["apache2-foreground"]
 # Etapa 2: Construir a imagem do banco de dados MySQL
 FROM mysql:5.7 AS ocomon_db
 
-ENV MYSQL_ROOT_PASSWORD=GsdW25T7@scf55Oi
+ENV MYSQL_ROOT_PASSWORD=root_password
 ENV MYSQL_DATABASE=ocomon
 ENV MYSQL_USER=ocomon_user
-ENV MYSQL_PASSWORD=AsIhhITg19r9j0
+ENV MYSQL_PASSWORD=mysql_senha_ocomon
 
 # Copiar o arquivo SQL de inicialização para o contêiner MySQL
 COPY --from=ocomon_web /docker-entrypoint-initdb.d/init.sql /docker-entrypoint-initdb.d/init.sql
