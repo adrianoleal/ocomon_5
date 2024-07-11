@@ -1,7 +1,5 @@
 services:
   web:
-    #volumes:
-    #  - ./www:/var/www/html
     build:
       context: .
       target: ocomon_web
@@ -9,23 +7,19 @@ services:
     restart: always
     ports:
       - "8081:80"
-    environment:
-      - DB_HOST=db
-      - DB_NAME=ocomon_5
-      - DB_USER=ocomon_5
-      - DB_PASSWORD=senha_ocomon_mysql
+    env_file:
+      - ./.env
     depends_on:
       - db
     networks:
       - ocomon_network
-
   db:
     build:
       context: .
       target: ocomon_db
+    container_name: ocomon_db
     volumes:
       - db_data:/var/lib/mysql
-    container_name: ocomon_db
     restart: always
     ports:
       - "3306:3306"
@@ -39,6 +33,16 @@ services:
     networks:
       - ocomon_network
 
+  cron:
+    build:
+      context: .
+      target: ocomon_cron
+    container_name: ocomon_cron
+    restart: always
+    depends_on:
+      - web
+    networks:
+      - ocomon_network
 volumes:
   db_data:
 
