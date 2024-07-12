@@ -32,7 +32,6 @@ services:
              --default-authentication-plugin=mysql_native_password
     networks:
       - ocomon_network
-
   cron:
     build:
       context: .
