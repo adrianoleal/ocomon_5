@@ -1,10 +1,10 @@
 # ocomon_5
-Teste da versão Ocomon_5, imagens (web e db) separadas.
+Teste da versão Ocomon_5, imagens (web, db e cron) separadas.
 --------------------------------------------------------
 
 Arquivo Dockerfile para montar uma imagem Docker com o OcoMon 5.0.
 
-As imagens são montada sobre php:8.3-apache e mysql:5.7
+As imagens são montada sobre php:8.3-apache, mysql:5.7 e alpine:3.18
 
 Apache
 PHP 8.3
@@ -12,7 +12,7 @@ Mysql
 Todas as configurações de ambiente para o funcionamento adequado do OcoMon.
 O download do OcoMon 5.0 é realizado durante o build da imagem.
 
-Arquivo assets/Dockerfile monta imagem docker msql e restaura o db.
+Arquivo Dockerfile, além de construir imagem do PHP, Mysql e Crontab, restaura o db inicial.
 
 
 Requisitos
