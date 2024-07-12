@@ -4,7 +4,6 @@ FROM php:8.3-apache AS ocomon_web
 ENV OCOMON_LINK="https://sourceforge.net/projects/ocomonphp/files/OcoMon_5.0/Final/ocomon-5.0.tar.gz/download"
 ENV FOLDER_NAME="ocomon-5.0"
 
-# Instalar dependências PHP e outras ferramentas necessárias
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libfreetype6-dev \
     libjpeg62-turbo-dev \
@@ -19,7 +18,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libkrb5-dev \
     libcurl4-openssl-dev \
     curl \
-    nano && \
+    nano \
+    gettext && \
     docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp --with-xpm && \
     docker-php-ext-configure imap --with-kerberos --with-imap-ssl && \
     docker-php-ext-install gd mysqli pdo pdo_mysql curl iconv mbstring ldap zip imap && \
@@ -40,10 +40,16 @@ RUN a2enmod rewrite
 
 # Baixar e configurar o Ocomon
 RUN curl -L ${OCOMON_LINK} | tar -xz -C /var/www/html && \
+#RUN tar -xzvf ./assets/ocomon-5.0.tar.gz -C /var/www/html && \
     mv /var/www/html/${FOLDER_NAME}/* /var/www/html && \
     rm -Rf /var/www/html/${FOLDER_NAME}
-# Copiar o arquivo de configurações do Ocomon config.inc.php:
-COPY ./assets/config.inc.php-dist /var/www/html/includes/config.inc.php
+
+# Copiar o arquivo de configuração do Ocomon config.inc.php-dist:
+COPY ./assets/config.inc.php-dist /var/www/html/includes/config.inc.php-dist
+
+# Substituir variáveis no arquivo config.inc.php-dist e mover para config.inc.php
+RUN envsubst < /var/www/html/includes/config.inc.php-dist > /var/www/html/includes/config.inc.php
+
 # Aplicando permissões:
 RUN chmod -R 755 /var/www/html && \
     chown -R www-data:www-data /var/www/html
