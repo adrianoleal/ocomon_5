@@ -9,6 +9,8 @@ services:
         DB_NAME: ${DB_NAME}
         DB_USER: ${DB_USER}
         DB_PASSWORD: ${DB_PASSWORD}
+        OCOMON_LINK: ${OCOMON_LINK}
+        FOLDER_NAME: ${FOLDER_NAME}
     container_name: ocomon_web
     restart: always
     ports:
