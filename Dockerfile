@@ -1,9 +1,6 @@
 # Etapa 1: Construir a imagem do servidor web
 FROM php:8.3-apache AS ocomon_web
 
-ENV OCOMON_LINK="https://sourceforge.net/projects/ocomonphp/files/OcoMon_5.0/Final/ocomon-5.0.tar.gz/download"
-ENV FOLDER_NAME="ocomon-5.0"
-
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libfreetype6-dev \
     libjpeg62-turbo-dev \
@@ -26,29 +23,55 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Configurar o timezone do PHP para o Brasil
-RUN echo "date.timezone = America/Porto_Velho" > /usr/local/etc/php/conf.d/timezone.ini
+# Declaração dos argumentos
+ARG DB_HOST
+ARG DB_NAME
+ARG DB_USER
+ARG DB_PASSWORD
+ARG TIME_ZONE
+ARG OCOMON_LINK
+ARG FOLDER_NAME
+
+# Configurar o fuso horário usando a variável de ambiente TIME_ZONE
+RUN echo "date.timezone = ${TIME_ZONE}" > /usr/local/etc/php/conf.d/timezone.ini
 
 # Apache ServerName
 RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
+
 # Configurar o Apache para suportar index.php
 RUN sed -i -e 's/DirectoryIndex index.html/DirectoryIndex index.php index.html/' /etc/apache2/mods-enabled/dir.conf
-# Copiar o arquivo de configuração do Apache para permitir reescrita de URLs
-COPY ./assets/000-default.conf /etc/apache2/sites-available/000-default.conf
+
+# Criar o arquivo 000-default.conf - permitir reescrita de URLs
+RUN printf '<VirtualHost *:80>\n\
+    <Directory /var/www/html>\n\
+        Options Indexes FollowSymLinks\n\
+        AllowOverride All\n\
+        Require all granted\n\
+    </Directory>\n\
+    ServerAdmin webmaster@localhost\n\
+    DocumentRoot /var/www/html\n\
+    ErrorLog ${APACHE_LOG_DIR}/error.log\n\
+    CustomLog ${APACHE_LOG_DIR}/access.log combined\n\
+</VirtualHost>\n' > /etc/apache2/sites-available/000-default.conf
+
+# Ativar o site padrão do Apache
+RUN a2ensite 000-default.conf
+
 # Habilitar o mod_rewrite do Apache
 RUN a2enmod rewrite
 
-# Baixar e configurar o Ocomon
+# Baixar e descompactar o Ocomon
 RUN curl -L ${OCOMON_LINK} | tar -xz -C /var/www/html && \
-#RUN tar -xzvf ./assets/ocomon-5.0.tar.gz -C /var/www/html && \
     mv /var/www/html/${FOLDER_NAME}/* /var/www/html && \
     rm -Rf /var/www/html/${FOLDER_NAME}
 
-# Copiar o arquivo de configuração do Ocomon config.inc.php-dist:
-COPY ./assets/config.inc.php-dist /var/www/html/includes/config.inc.php-dist
-
-# Substituir variáveis no arquivo config.inc.php-dist e mover para config.inc.php
-RUN envsubst < /var/www/html/includes/config.inc.php-dist > /var/www/html/includes/config.inc.php
+# Substituir variáveis no arquivo config.inc.php-dist
+RUN sed -i "s/define(\"SQL_USER\", \".*\");/define(\"SQL_USER\", \"${DB_USER}\");/g" /var/www/html/includes/config.inc.php-dist \
+    && sed -i "s/define(\"SQL_PASSWD\", \".*\");/define(\"SQL_PASSWD\", \"${DB_PASSWORD}\");/g" /var/www/html/includes/config.inc.php-dist \
+    && sed -i "s/define(\"SQL_SERVER\", \".*\");/define(\"SQL_SERVER\", \"${DB_HOST}\");/g" /var/www/html/includes/config.inc.php-dist \
+    && sed -i "s/define(\"SQL_DB\", \".*\");/define(\"SQL_DB\", \"${DB_NAME}\");/g" /var/www/html/includes/config.inc.php-dist \
+    && sed -i "s/define(\"DB_CCUSTO\", \".*\");/define(\"DB_CCUSTO\", \"${DB_NAME}\");/g" /var/www/html/includes/config.inc.php-dist \
+    && cp /var/www/html/includes/config.inc.php-dist /var/www/html/includes/config.inc.php
 
 # Aplicando permissões:
 RUN chmod -R 755 /var/www/html && \
@@ -60,33 +83,32 @@ WORKDIR /var/www/html
 # Criar a pasta docker-entrypoint-initdb.d
 RUN mkdir -p /docker-entrypoint-initdb.d
 
-# Copiar o arquivo SQL de inicialização do banco de dados para o diretório apropriado
-RUN cp /var/www/html/install/5.x/01-DB_OCOMON_5.x-FRESH_INSTALL_STRUCTURE_AND_BASIC_DATA.sql /docker-entrypoint-initdb.d/init.sql
-
 # Expor a porta 8081 para o serviço web
 EXPOSE 8081
 
 CMD ["apache2-foreground"]
 
-# Etapa 2: Construir a imagem do banco de dados MySQL
-FROM mysql:5.7 AS ocomon_db
+# Etapa 2: Construir a imagem do banco de dados - MariaDB
+FROM mariadb:10.2 AS ocomon_db
 
-ENV MYSQL_ROOT_PASSWORD=your_root_password
-ENV MYSQL_DATABASE=ocomon
-ENV MYSQL_USER=ocomon_user
-ENV MYSQL_PASSWORD=senha_ocomon_mysql
+# Instalar pacotes adicionais
+RUN apt-get update && apt-get install -y curl tar
 
-# Copiar o arquivo SQL de inicialização para o contêiner MySQL
-COPY --from=ocomon_web /docker-entrypoint-initdb.d/init.sql /docker-entrypoint-initdb.d/init.sql
+# Baixar e preparar o arquivo SQL
+RUN curl -L https://sourceforge.net/projects/ocomonphp/files/OcoMon_5.0/Final/ocomon-5.0.tar.gz/download -o /tmp/ocomon.tar.gz \
+    && mkdir -p /tmp/ocomon \
+    && tar -xzf /tmp/ocomon.tar.gz -C /tmp/ocomon --strip-components=1 \
+    && mv /tmp/ocomon/install/5.x/01-DB_OCOMON_5.x-FRESH_INSTALL_STRUCTURE_AND_BASIC_DATA.sql /docker-entrypoint-initdb.d/init.sql \
+    && rm -rf /tmp/ocomon /tmp/ocomon.tar.gz
 
 # Expor a porta 3306 para o serviço MySQL
 EXPOSE 3306
 
-# Etapa 3: Construir a imagem para cron
-FROM alpine:3.18 AS ocomon_cron
+# Etapa 3: Construir a imagem para o crontab
+FROM alpine:latest AS ocomon_cron
 
 # Instalar cron, PHP, e curl no contêiner Alpine
-RUN apk add --no-cache \
+RUN apk add --update --no-cache \
     php \
     php-cli \
     php-mbstring \
@@ -103,12 +125,9 @@ RUN apk add --no-cache \
     openrc \
     && rm -rf /var/cache/apk/*
 
-# Adicionar entrypoint script
-COPY ./assets/start_cron.sh /start_cron.sh
-RUN chmod +x /start_cron.sh
+RUN touch mycrontab.tmp \
+    && echo "# m h  dom mon dow   command\n* * * * * curl http://ocomon_web/ocomon/open_tickets_by_email/service/getMailAndOpenTicket.php\n* * * * * curl http://ocomon_web/api/ocomon_api/service/sendEmail.php\n* * * * * curl http://ocomon_web/ocomon/service/update_auto_approval.php\n#* * * * * curl http://ocomon_web/ocomon/service/update_auto_close_due_inactivity.php" > mycrontab.tmp \
+    && crontab mycrontab.tmp \
+    && rm -rf mycrontab.tmp
 
-# Copiar o arquivo de crontab
-COPY ./assets/mycrontab /etc/crontabs/root
-RUN chmod 0644 /etc/crontabs/root
-
-ENTRYPOINT ["/start_cron.sh"]
+CMD ["/usr/sbin/crond", "-f", "-d", "0"]
