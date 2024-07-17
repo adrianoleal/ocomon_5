@@ -3,15 +3,16 @@ services:
     build:
       context: .
       target: ocomon_web
+      args:
+        TIME_ZONE: ${TIME_ZONE}
+        DB_HOST: ${DB_HOST}
+        DB_NAME: ${DB_NAME}
+        DB_USER: ${DB_USER}
+        DB_PASSWORD: ${DB_PASSWORD}
     container_name: ocomon_web
     restart: always
     ports:
       - "8081:80"
-    environment:
-      - DB_HOST=${DB_HOST}
-      - DB_NAME=${DB_NAME}
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
     depends_on:
       - db
     networks:
