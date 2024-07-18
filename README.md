@@ -2,7 +2,7 @@ Documentação do projeto Dockerized da Ocomon 5
 Teste da versão Ocomon_5, imagens (web, db e cron) separadas.
 --------------------------------------------------------------
 Site do OcoMon: https://ocomon.com.br/site/
-___________________________________________
+_
 Índice
 Introdução
 Pré-requisitos
@@ -14,9 +14,8 @@ Configuração do Cron Job
 Gerenciamento de Logs
 Solução de problemas
 
-_____________
 1. Introdução
-
+   -
 Este documento fornece instruções sobre como configurar e executar o projeto Ocomon 5 em um ambiente Dockerizado. Ele inclui etapas para configuração, construção de imagens Docker, execução de contêineres e gerenciamento de logs.
 
 As imagens são montada sobre php:8.3-apache, mariadb:latest e alpine:3.18
@@ -27,11 +26,12 @@ O Banco de Dados inicial de primeira instalação do Ocomon 5, é restaurado no 
 
 Aguarde o tempo necessário para baixar o ocomon, descompactar, aplicar as configurações e permissões e etc (demora um tanto).
 
------------------
 2. Pré-requisitos
+   -
 Antes de começar, certifique-se de ter o seguinte instalado no seu sistema:
 
 Docker
+
 Docker Compose
 
 ---------------------------
