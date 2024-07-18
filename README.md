@@ -33,7 +33,7 @@ cd ocomon_5
 4. Configuração do ambiente
 ---------------------------
 Crie/Edite um arquivo .env no diretório raiz do projeto com o seguinte conteúdo (altere que o quiser/souber o que está fazendo):
-*Altere a senha do Mysql!!!
+*Altere a senha do Mysql, Time_Zone e Tz_Cron para suas necessidades!!!
 
 DB_HOST=db
 DB_NAME=ocomon_5
