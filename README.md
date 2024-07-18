@@ -38,8 +38,8 @@ Crie/Edite um arquivo .env no diretório raiz do projeto com o seguinte conteúd
 DB_HOST=db
 DB_NAME=ocomon_5
 DB_USER=ocomon_5
-DB_PASSWORD=AsIhhITg19r9j0
-MYSQL_ROOT_PASSWORD=GsdW25T7@scf55Oi
+DB_PASSWORD=
+MYSQL_ROOT_PASSWORD=
 TIME_ZONE=America/Porto_Velho
 OCOMON_LINK="https://sourceforge.net/projects/ocomonphp/files/OcoMon_5.0/Final/ocomon-5.0.tar.gz/download"
 FOLDER_NAME="ocomon-5.0"
