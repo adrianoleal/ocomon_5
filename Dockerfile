@@ -67,9 +67,6 @@ RUN chmod -R 755 /var/www/html && \
 # Definir o diretório de trabalho
 WORKDIR /var/www/html
 
-# Criar a pasta docker-entrypoint-initdb.d
-#RUN mkdir -p /docker-entrypoint-initdb.d
-
 # Expor a porta 8081 para o serviço web
 EXPOSE 8081
 
