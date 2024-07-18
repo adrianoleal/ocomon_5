@@ -2,26 +2,13 @@
 FROM php:8.3-apache AS ocomon_web
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libfreetype6-dev \
-    libjpeg62-turbo-dev \
-    libpng-dev \
-    libwebp-dev \
-    libxpm-dev \
-    libonig-dev \
-    libldap2-dev \
-    libzip-dev \
-    libssl-dev \
-    libc-client-dev \
-    libkrb5-dev \
-    libcurl4-openssl-dev \
-    curl \
-    nano \
-    gettext && \
+    libfreetype6-dev libjpeg62-turbo-dev libpng-dev libwebp-dev libxpm-dev \
+    libonig-dev libldap2-dev libzip-dev libssl-dev libc-client-dev libkrb5-dev \
+    libcurl4-openssl-dev curl nano gettext && \
     docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp --with-xpm && \
     docker-php-ext-configure imap --with-kerberos --with-imap-ssl && \
     docker-php-ext-install gd mysqli pdo pdo_mysql curl iconv mbstring ldap zip imap && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get clean && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
 
 # Declaração dos argumentos
 ARG DB_HOST
@@ -81,7 +68,7 @@ RUN chmod -R 755 /var/www/html && \
 WORKDIR /var/www/html
 
 # Criar a pasta docker-entrypoint-initdb.d
-RUN mkdir -p /docker-entrypoint-initdb.d
+#RUN mkdir -p /docker-entrypoint-initdb.d
 
 # Expor a porta 8081 para o serviço web
 EXPOSE 8081
@@ -89,16 +76,20 @@ EXPOSE 8081
 CMD ["apache2-foreground"]
 
 # Etapa 2: Construir a imagem do banco de dados - MariaDB
-FROM mariadb:10.2 AS ocomon_db
+FROM mariadb:latest AS ocomon_db
 
 # Instalar pacotes adicionais
 RUN apt-get update && apt-get install -y curl tar
 
+# Declaração dos argumentos
+ARG OCOMON_LINK
+ARG DB_INSTALL
+
 # Baixar e preparar o arquivo SQL
-RUN curl -L https://sourceforge.net/projects/ocomonphp/files/OcoMon_5.0/Final/ocomon-5.0.tar.gz/download -o /tmp/ocomon.tar.gz \
+RUN curl -L ${OCOMON_LINK} -o /tmp/ocomon.tar.gz \
     && mkdir -p /tmp/ocomon \
     && tar -xzf /tmp/ocomon.tar.gz -C /tmp/ocomon --strip-components=1 \
-    && mv /tmp/ocomon/install/5.x/01-DB_OCOMON_5.x-FRESH_INSTALL_STRUCTURE_AND_BASIC_DATA.sql /docker-entrypoint-initdb.d/init.sql \
+    && mv /tmp/ocomon/install/5.x/${DB_INSTALL} /docker-entrypoint-initdb.d/init.sql \
     && rm -rf /tmp/ocomon /tmp/ocomon.tar.gz
 
 # Expor a porta 3306 para o serviço MySQL
@@ -125,9 +116,13 @@ RUN apk add --update --no-cache \
     openrc \
     && rm -rf /var/cache/apk/*
 
-RUN touch mycrontab.tmp \
-    && echo "# m h  dom mon dow   command\n* * * * * curl http://ocomon_web/ocomon/open_tickets_by_email/service/getMailAndOpenTicket.php\n* * * * * curl http://ocomon_web/api/ocomon_api/service/sendEmail.php\n* * * * * curl http://ocomon_web/ocomon/service/update_auto_approval.php\n#* * * * * curl http://ocomon_web/ocomon/service/update_auto_close_due_inactivity.php" > mycrontab.tmp \
-    && crontab mycrontab.tmp \
-    && rm -rf mycrontab.tmp
+# Declaração dos argumentos
+ARG TZ_CRON
 
+# Use printf para criar o arquivo mycrontab.tmp
+RUN touch mycrontab.tmp \
+ && printf "# m h  dom mon dow   command\n* * * * * curl http://ocomon_web/ocomon/open_tickets_by_email/service/getMailAndOpenTicket.php\n* * * * * curl http://ocomon_web/api/ocomon_api/service/sendEmail.php\n* * * * * curl http://ocomon_web/ocomon/service/update_auto_approval.php\n#* * * * * curl http://ocomon_web/ocomon/service/update_auto_close_due_inactivity.php\n" > mycrontab.tmp \ && crontab mycrontab.tmp \
+ && rm -rf mycrontab.tmp
+
+RUN sed -i "1 iCRON_TZ=\"${TZ_CRON}\"" /etc/crontabs/root
 CMD ["/usr/sbin/crond", "-f", "-d", "0"]
