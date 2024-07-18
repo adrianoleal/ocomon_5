@@ -1,10 +1,11 @@
-Documentação do projeto Dockerized da Ocomon 5
+Documentação do projeto Dockerizado do Ocomon 5
 -
-Teste da versão Ocomon_5, imagens (web, db e cron) separadas.
+Versão Ocomon_5, imagens (web, db e cron) separadas.
 --------------------------------------------------------------
 Site do OcoMon: https://ocomon.com.br/site/
 
 _______________________________________________________________
+
 Índice
 
 Introdução
